@@ -19,9 +19,9 @@ Cada tarea tiene un criterio de aceptación (→). Trabajar en orden.
 - [ ] **P1** Trigger o Server Action que cree `empresa` + `perfil` al registrarse. → registro completo crea ambos.
 
 ## Fase 3: Algoritmos (RPC)
-- [ ] **P0** `02_rpc_match.sql`: `calcular_match`, `ranking_lote`, `licitaciones_compatibles` según `CONTEXT.md` §4.1-4.2. → con el seed, el ranking del lote demo tiene scores distintos y ninguno en 100.
-- [ ] **P0** `03_rpc_ute.sql`: `generar_utes` según §4.3, con comentarios de la lógica. → el lote demo genera ≥ 1 UTE con cobertura 100 y 2 miembros.
-- [ ] **P1** Tests SQL simples (casos: pyme perfecta, pyme sin obligatorios, sin candidatas). → 3 casos con resultado esperado documentado.
+- [ ] **P0** `02_rpc_match.sql`: `calcular_match`, `ranking_lote`, `licitaciones_compatibles` según `CONTEXT.md` §4.1-4.2. → `supabase/tests/algoritmos_check.sql` pasa los 3 casos.
+- [ ] **P0** `03_rpc_ute.sql`: `generar_utes` según §4.3, con comentarios de la lógica (incluye poda y dedup). → `supabase/tests/algoritmos_check.sql` pasa los 3 casos.
+- [x] **P1** Tests SQL simples (casos: pyme perfecta, pyme sin obligatorios, sin candidatas). → `supabase/tests/algoritmos_check.sql`.
 
 ## Fase 4: Seed
 - [ ] **P0** `scripts/seed.ts` idempotente: catálogo, 2 mineras, 5 pymes verosímiles de San Juan, 2 licitaciones con lotes y requisitos, usuarios demo. → `npm run seed` dos veces no duplica.

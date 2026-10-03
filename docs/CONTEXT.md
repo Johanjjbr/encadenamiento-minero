@@ -16,7 +16,7 @@ Next.js (App Router) + TypeScript estricto + Tailwind + shadcn/ui · Supabase (P
 Capacidades y requisitos **no** son JSONB libres. Se modelan con un **catálogo controlado** y tablas relacionales. Así el algoritmo es SQL simple y verificable, y "soldadura" siempre significa lo mismo para pymes y mineras. JSONB queda solo para datos libres no usados por el algoritmo (`empresas.extras`).
 
 ### Enums
-`tipo_empresa` (MINERA | PYME) · `estado_certificacion` (declarada | verificada | vencida) · `estado_licitacion` (borrador | abierta | cerrada) · `estado_ute` (sugerida | aceptada | rechazada) · `tipo_requisito` (capacidad | norma)
+`tipo_empresa` (MINERA | PYME) · `estado_certificacion` (declarada | verificada | vencida) · `estado_licitacion` (borrador | abierta | cerrada) · `estado_ute` (sugerida | aceptada | rechazada) · `tipo_requisito` (capacidad | norma) · `rol_usuario` (minera | pyme)
 
 ### Tablas
 
@@ -86,6 +86,10 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
 - `empresa_capacidades`, `certificaciones`: misma regla que `empresas`.
 - `licitaciones`, `lotes`, `lote_requisitos`: escribe solo la minera dueña; lectura pública para usuarios autenticados cuando `estado = abierta`.
 - `catalogo_capacidades`: lectura para todos los autenticados.
+- Una pyme solo puede **declarar** certificaciones (`estado = 'declarada'`); `verificada` la carga un tercero o el service role, y las verificadas no se editan desde el cliente.
+- `empresas.tipo` no es editable desde el cliente (permiso por columna). `matches`, `utes_sugeridas` (salvo `estado`) y `ute_miembros` solo se escriben desde RPC `security definer` o service role.
+- Registro: el trigger `handle_new_user` crea empresa + perfil. Para vincular un usuario a una empresa ya existente (seed) se usa `app_metadata.empresa_id`, que solo puede escribir el service role. `user_metadata` (controlado por el usuario) nunca decide a qué empresa se une.
+- Las funciones auxiliares de `01_rls.sql` son `security definer` para evitar recursión entre políticas.
 - `SUPABASE_SERVICE_ROLE_KEY` solo en `scripts/seed.ts` y código de servidor.
 
 ## 6. Estructura de directorios

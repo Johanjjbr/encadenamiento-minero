@@ -77,10 +77,17 @@ npm run seed
 npm run dev      # servidor de desarrollo en http://localhost:3000
 npm run build    # build de producción
 npm run seed     # carga catálogo, pymes, mineras y licitaciones de demo
-npm run types    # regenera types/database.ts desde Supabase
 ```
 
-`npm run types` requiere Supabase CLI y `SUPABASE_PROJECT_ID` en el entorno.
+Para generar los tipos de la base (requiere `npx supabase login` una vez):
+
+```bash
+# macOS / Linux / Git Bash
+npx supabase gen types typescript --project-id TU_PROJECT_ID > types/database.ts
+
+# Windows PowerShell (evita que el archivo quede en UTF-16)
+npx supabase gen types typescript --project-id TU_PROJECT_ID | Out-File -Encoding utf8 types/database.ts
+```
 
 ## Estructura
 
