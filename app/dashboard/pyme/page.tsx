@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 interface Alianza {
   id: string;
   cobertura: number;
+  estado: "sugerida" | "aceptada" | "rechazada";
   socias: { id: string; nombre: string }[];
 }
 
@@ -41,7 +42,8 @@ export default async function PymeInicio() {
       supabase.from("matches").select("lote_id, brecha").eq("empresa_id", sesion.empresa.id).in("lote_id", loteIds),
       supabase
         .from("utes_sugeridas")
-        .select("id, lote_id, cobertura, miembros:ute_miembros(empresa:empresas(id, nombre))")
+        .select("id, lote_id, cobertura, estado, miembros:ute_miembros(empresa:empresas(id, nombre))")
+        .neq("estado", "rechazada")
         .in("lote_id", loteIds),
       supabase.from("licitaciones").select("id, cierre_el, minera:empresas(nombre)").in("id", licIds),
     ]);
@@ -56,7 +58,7 @@ export default async function PymeInicio() {
         .filter((e): e is { id: string; nombre: string } => e !== null && e.id !== sesion.empresa.id);
       // La RLS solo devuelve UTEs donde esta pyme es miembro.
       const lista = alianzasPorLote.get(u.lote_id) ?? [];
-      lista.push({ id: u.id, cobertura: Number(u.cobertura), socias });
+      lista.push({ id: u.id, cobertura: Number(u.cobertura), estado: u.estado, socias });
       alianzasPorLote.set(u.lote_id, lista);
     }
 
@@ -67,6 +69,7 @@ export default async function PymeInicio() {
 
   const completos = lotes.filter((l) => Number(l.score) >= 100).length;
   const totalAlianzas = Array.from(alianzasPorLote.values()).reduce((a, l) => a + l.length, 0);
+  const aceptadas = Array.from(alianzasPorLote.values()).flat().filter((a) => a.estado === "aceptada").length;
   const mejor = lotes.reduce((m, l) => Math.max(m, Number(l.score)), 0);
   // Brechas obligatorias distintas: lo que más conviene cerrar.
   const faltantesObligatorios = Array.from(
@@ -96,7 +99,13 @@ export default async function PymeInicio() {
           icono={Handshake}
           etiqueta="Alianzas sugeridas"
           valor={totalAlianzas}
-          detalle={totalAlianzas > 0 ? "con otras pymes locales" : "por ahora ninguna"}
+          detalle={
+            aceptadas > 0
+              ? `${aceptadas} ${aceptadas === 1 ? "aceptada" : "aceptadas"} por la operadora`
+              : totalAlianzas > 0
+                ? "con otras pymes locales"
+                : "por ahora ninguna"
+          }
           destacado={totalAlianzas > 0}
         />
         <StatCard
@@ -118,7 +127,7 @@ export default async function PymeInicio() {
           {lotes.map((lote) => {
             const score = Number(lote.score);
             const brecha = brechaPorLote.get(lote.lote_id) ?? [];
-            const alianzas = (alianzasPorLote.get(lote.lote_id) ?? []).sort((a, b) => b.cobertura - a.cobertura);
+            const alianzas = (alianzasPorLote.get(lote.lote_id) ?? []).sort((a, b) => Number(b.estado === "aceptada") - Number(a.estado === "aceptada") || b.cobertura - a.cobertura);
             const info = infoLicitacion.get(lote.licitacion_id);
             return (
               <li key={lote.lote_id} className="overflow-hidden rounded-2xl border bg-card shadow-xs">
@@ -182,10 +191,21 @@ export default async function PymeInicio() {
                 </div>
 
                 {alianzas.length > 0 && (
-                  <div className="border-t bg-accent/50 px-5 py-4">
-                    <p className="flex items-center gap-2 text-sm font-semibold text-accent-foreground">
-                      <Handshake className="size-4" aria-hidden /> Alianza sugerida
-                    </p>
+                  <div
+                    className={cn(
+                      "border-t px-5 py-4",
+                      alianzas[0].estado === "aceptada" ? "bg-emerald-50" : "bg-accent/50"
+                    )}
+                  >
+                    {alianzas[0].estado === "aceptada" ? (
+                      <p className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
+                        <CircleCheck className="size-4" aria-hidden /> ¡{info?.minera ?? "La operadora"} aceptó tu alianza!
+                      </p>
+                    ) : (
+                      <p className="flex items-center gap-2 text-sm font-semibold text-accent-foreground">
+                        <Handshake className="size-4" aria-hidden /> Alianza sugerida
+                      </p>
+                    )}
                     <ul className="mt-2 space-y-2">
                       {alianzas.map((a) => (
                         <li key={a.id} className="flex flex-wrap items-center gap-3 text-sm">
@@ -195,6 +215,9 @@ export default async function PymeInicio() {
                             pasan de <span className="tabular-nums">{formatPorcentaje(score)}</span> a{" "}
                             <span className="font-semibold tabular-nums text-emerald-700">{formatPorcentaje(a.cobertura)}</span> del lote.
                           </span>
+                          {a.estado === "aceptada" && (
+                            <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-semibold text-white">Aceptada</span>
+                          )}
                         </li>
                       ))}
                     </ul>

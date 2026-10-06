@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FilePlus2, LayoutDashboard, ListChecks, LogOut, UserCog } from "lucide-react";
+import { FilePlus2, LayoutDashboard, ListChecks, LogOut, UserCog, Users } from "lucide-react";
 import { EmpresaAvatar } from "@/components/features/empresa-avatar";
 import { Logo } from "@/components/features/logo";
 import { NavLink } from "@/components/features/nav-link";
@@ -11,6 +11,7 @@ const ICONO = "size-4 shrink-0";
 const MENU = {
   minera: [
     { href: "/dashboard/minera", etiqueta: "Licitaciones y candidatas", exact: true, icono: <LayoutDashboard className={ICONO} aria-hidden /> },
+    { href: "/dashboard/minera/empresas", etiqueta: "Proveedores", exact: false, icono: <Users className={ICONO} aria-hidden /> },
     { href: "/dashboard/minera/nueva", etiqueta: "Publicar licitación", exact: false, icono: <FilePlus2 className={ICONO} aria-hidden /> },
   ],
   pyme: [

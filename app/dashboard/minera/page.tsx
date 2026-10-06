@@ -53,12 +53,12 @@ export default async function MineraInicio() {
   // Resumen por lote: mejor candidata individual y mejor UTE sugerida.
   const mejorScore = new Map<string, number>();
   const candidatas = new Map<string, number>();
-  const mejorUte = new Map<string, { cobertura: number; cantidad: number }>();
+  const mejorUte = new Map<string, { cobertura: number; cantidad: number; aceptada: boolean }>();
 
   if (loteIds.length > 0) {
     const [matchesRes, utesRes] = await Promise.all([
       supabase.from("matches").select("lote_id, score").in("lote_id", loteIds),
-      supabase.from("utes_sugeridas").select("lote_id, cobertura").in("lote_id", loteIds),
+      supabase.from("utes_sugeridas").select("lote_id, cobertura, estado").in("lote_id", loteIds).neq("estado", "rechazada"),
     ]);
     if (matchesRes.error) return <ErrorState mensaje={matchesRes.error.message} />;
     if (utesRes.error) return <ErrorState mensaje={utesRes.error.message} />;
@@ -73,6 +73,7 @@ export default async function MineraInicio() {
       mejorUte.set(u.lote_id, {
         cobertura: Math.max(previa?.cobertura ?? 0, Number(u.cobertura)),
         cantidad: (previa?.cantidad ?? 0) + 1,
+        aceptada: (previa?.aceptada ?? false) || u.estado === "aceptada",
       });
     }
   }
@@ -215,7 +216,12 @@ export default async function MineraInicio() {
                             <span className="text-xs text-muted-foreground">Sin calcular</span>
                           )}
 
-                          {ute ? (
+                          {ute?.aceptada ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-200">
+                              <Handshake className="size-3.5" aria-hidden />
+                              UTE aceptada
+                            </span>
+                          ) : ute ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
                               <Handshake className="size-3.5" aria-hidden />
                               UTE {formatPorcentaje(ute.cobertura)}
@@ -252,8 +258,18 @@ export default async function MineraInicio() {
             {pymesRes.error ? (
               <ErrorState mensaje={pymesRes.error.message} />
             ) : (
-              <MapaSanJuan datos={porDepto} mina={sesion.empresa.departamento} />
+              <MapaSanJuan
+                datos={porDepto}
+                mina={sesion.empresa.departamento}
+                hrefFiltro={(d) => `/dashboard/minera/empresas?depto=${encodeURIComponent(d)}`}
+              />
             )}
+            <Link
+              href="/dashboard/minera/empresas"
+              className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              Ver directorio de proveedores <ChevronRight className="size-4" aria-hidden />
+            </Link>
           </section>
         </aside>
       </div>

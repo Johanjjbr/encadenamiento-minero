@@ -259,3 +259,32 @@ export async function eliminarLicitacion(_prev: FormState, formData: FormData): 
   revalidatePath("/dashboard/pyme");
   return { ok: true };
 }
+
+/** La minera acepta o rechaza una alianza sugerida (o la vuelve a "sugerida").
+ *  La RLS (utes_update) solo deja tocar UTEs de lotes propios y el permiso por
+ *  columna solo permite cambiar `estado`. Al recalcular, generar_utes no borra
+ *  ni vuelve a sugerir las alianzas ya decididas. */
+export async function cambiarEstadoUte(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireRol("minera");
+
+  const uteId = String(formData.get("uteId") ?? "");
+  const loteId = String(formData.get("loteId") ?? "");
+  const estado = String(formData.get("estado") ?? "");
+  if (!esUuid(uteId) || !esUuid(loteId)) return { error: "Alianza inválida." };
+  if (estado !== "sugerida" && estado !== "aceptada" && estado !== "rechazada") return { error: "Estado inválido." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("utes_sugeridas")
+    .update({ estado })
+    .eq("id", uteId)
+    .eq("lote_id", loteId)
+    .select("id");
+  if (error) return { error: `No se pudo actualizar la alianza: ${error.message}` };
+  if (!data || data.length === 0) return { error: "No se encontró la alianza (¿se recalculó el lote?)." };
+
+  revalidatePath(`/dashboard/minera/lotes/${loteId}`);
+  revalidatePath("/dashboard/minera");
+  revalidatePath("/dashboard/pyme");
+  return { ok: true };
+}

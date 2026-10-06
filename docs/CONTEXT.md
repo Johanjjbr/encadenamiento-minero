@@ -78,7 +78,7 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
    ```
 5. **Poda y deduplicación:** si al quitar un miembro la cobertura no baja, se lo elimina (evita miembros redundantes). Luego se descartan UTEs con el mismo conjunto de miembros que otra ya generada (distintas anclas pueden converger en la misma alianza).
 6. **Alternativas:** si distintas anclas llegan a conjuntos de miembros distintos con buena cobertura, se persisten todos (son alternativas). Anclas y candidatas se recorren en orden determinista (cobertura desc, luego id).
-7. Se persiste solo si hay ≥ 2 miembros y `cobertura` > mejor score individual. Se guardan en `utes_sugeridas` + `ute_miembros` (con `aporte`). Se re-ejecuta de forma idempotente (reemplaza las sugeridas en estado `sugerida` de ese lote).
+7. Se persiste solo si hay ≥ 2 miembros y `cobertura` > mejor score individual. Se guardan en `utes_sugeridas` + `ute_miembros` (con `aporte`). Se re-ejecuta de forma idempotente (reemplaza las sugeridas en estado `sugerida` de ese lote). Las UTEs que la minera ya aceptó o rechazó se conservan y no se vuelven a sugerir con los mismos miembros.
 
 ## 5. Seguridad (RLS)
 
@@ -100,7 +100,7 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
 ├── app/
 │   ├── (auth)/                 # Login y registro B2B (elige rol)
 │   ├── dashboard/
-│   │   ├── minera/             # nueva/ (alta licitación + lotes + requisitos), lotes/[id] (ranking, UTEs)
+│   │   ├── minera/             # nueva/ (alta licitación), lotes/[id] (ranking, UTEs, aceptar/rechazar), empresas/ (directorio y ficha de pyme)
 │   │   └── pyme/               # Perfil y capacidades, licitaciones compatibles, alertas UTE
 │   └── page.tsx                # Landing / pitch
 ├── components/

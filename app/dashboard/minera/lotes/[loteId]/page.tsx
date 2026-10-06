@@ -11,13 +11,46 @@ import { StatCard } from "@/components/features/stat-card";
 import { EmptyState, ErrorState } from "@/components/features/state-messages";
 import { UteBuilderCard } from "@/components/features/ute-builder-card";
 import { requireRol } from "@/lib/auth";
-import { recalcularLote } from "@/lib/actions/minera";
+import { cambiarEstadoUte, recalcularLote } from "@/lib/actions/minera";
 import { formatPorcentaje } from "@/lib/format";
 import { parseAporte, parseBrecha } from "@/lib/match";
 import { createClient } from "@/lib/supabase/server";
 import type { MiembroUte, RequisitoResumen } from "@/lib/ute";
 import { cn } from "@/lib/utils";
 import { esUuid } from "@/lib/validation";
+
+const ORDEN_ESTADO = { aceptada: 0, sugerida: 1, rechazada: 2 } as const;
+
+/** Botones para decidir sobre una alianza (aceptar / rechazar / deshacer). */
+function AccionesUte({ uteId, loteId, estado }: { uteId: string; loteId: string; estado: keyof typeof ORDEN_ESTADO }) {
+  const boton = (siguiente: keyof typeof ORDEN_ESTADO, etiqueta: string, variante: "boton" | "secundario") => (
+    <ActionForm
+      key={siguiente}
+      action={cambiarEstadoUte}
+      submitLabel={etiqueta}
+      pendingLabel="Guardando…"
+      successLabel=""
+      variante={variante}
+      className="[&>div]:mt-0"
+    >
+      <input type="hidden" name="uteId" value={uteId} />
+      <input type="hidden" name="loteId" value={loteId} />
+      <input type="hidden" name="estado" value={siguiente} />
+    </ActionForm>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {estado === "sugerida" ? (
+        <>
+          {boton("rechazada", "Rechazar", "secundario")}
+          {boton("aceptada", "Aceptar alianza", "boton")}
+        </>
+      ) : (
+        boton("sugerida", estado === "aceptada" ? "Deshacer aceptación" : "Volver a considerar", "secundario")
+      )}
+    </div>
+  );
+}
 
 interface Props {
   params: Promise<{ loteId: string }>;
@@ -50,7 +83,7 @@ export default async function LotePage({ params, searchParams }: Props) {
       .eq("lote_id", loteId),
     supabase
       .from("utes_sugeridas")
-      .select("id, score_total, cobertura, miembros:ute_miembros(aporte, empresa:empresas(id, nombre, departamento))")
+      .select("id, score_total, cobertura, estado, miembros:ute_miembros(aporte, empresa:empresas(id, nombre, departamento))")
       .eq("lote_id", loteId),
   ]);
 
@@ -103,15 +136,25 @@ export default async function LotePage({ params, searchParams }: Props) {
       return {
         id: u.id,
         score_total: Number(u.score_total),
+        estado: u.estado,
         cobertura: Number(u.cobertura),
         miembros,
         scoreIndividual: miembros.reduce((acc, m) => acc + (scores[m.empresaId] ?? 0), 0),
       };
     })
     // Más puntaje primero; a igual puntaje, la alianza de miembros más fuertes.
-    .sort((a, b) => b.score_total - a.score_total || b.scoreIndividual - a.scoreIndividual);
+    // Aceptadas primero, rechazadas al final; dentro de cada grupo, más puntaje
+    // primero y, a igual puntaje, la alianza de miembros más fuertes.
+    .sort(
+      (a, b) =>
+        ORDEN_ESTADO[a.estado] - ORDEN_ESTADO[b.estado] ||
+        b.score_total - a.score_total ||
+        b.scoreIndividual - a.scoreIndividual
+    );
 
-  const recomendada = utes[0];
+  const recomendada = utes.find((u) => u.estado !== "rechazada");
+  const hayAceptada = utes.some((u) => u.estado === "aceptada");
+  const hrefEmpresa = (empresaId: string) => `/dashboard/minera/empresas/${empresaId}?desde=${loteId}`;
   const miembrosRecomendada = recomendada?.miembros.map((m) => m.empresaId) ?? [];
 
   // Gráfico: top 5 pymes solas + la alianza recomendada.
@@ -183,7 +226,7 @@ export default async function LotePage({ params, searchParams }: Props) {
         />
         <StatCard
           icono={Handshake}
-          etiqueta="Mejor alianza (UTE)"
+          etiqueta={hayAceptada ? "Alianza aceptada" : "Mejor alianza (UTE)"}
           valor={recomendada ? formatPorcentaje(recomendada.cobertura) : "—"}
           detalle={
             recomendada
@@ -243,6 +286,12 @@ export default async function LotePage({ params, searchParams }: Props) {
         <h2 id="titulo-utes" className="flex items-center gap-2 text-lg font-semibold">
           <Handshake className="size-5 text-primary" aria-hidden /> Alianzas sugeridas (UTE)
         </h2>
+        {utes.length > 0 && (
+          <p className="-mt-2 text-sm text-muted-foreground">
+            Aceptá la alianza que prefieras: las pymes miembro la ven marcada como aceptada en su panel. Las decididas no
+            se pierden al recalcular.
+          </p>
+        )}
         {errUte ? (
           <ErrorState mensaje={errUte.message} />
         ) : utes.length > 0 ? (
@@ -254,7 +303,10 @@ export default async function LotePage({ params, searchParams }: Props) {
                 miembros={ute.miembros}
                 requisitos={requisitos}
                 scores={scores}
-                destacada={i === 0}
+                destacada={i === 0 && !hayAceptada}
+                estado={ute.estado}
+                hrefEmpresa={hrefEmpresa}
+                acciones={<AccionesUte uteId={ute.id} loteId={loteId} estado={ute.estado} />}
               />
             ))}
           </div>
@@ -335,7 +387,7 @@ export default async function LotePage({ params, searchParams }: Props) {
         ) : filas.length === 0 ? (
           <EmptyState icono={MapPin} titulo={`Sin candidatas en ${depto}`} descripcion="Probá con otro departamento." />
         ) : (
-          <RankingTable filas={filas} miembrosUte={miembrosRecomendada} />
+          <RankingTable filas={filas} miembrosUte={miembrosRecomendada} hrefEmpresa={hrefEmpresa} />
         )}
       </section>
     </div>

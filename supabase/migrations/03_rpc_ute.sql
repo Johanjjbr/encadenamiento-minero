@@ -63,7 +63,8 @@ $$;
 --    (evita miembros redundantes, p.ej. una 3ra pyme que no aporta nada
 --    nuevo una vez que las otras 2 ya cubren todo).
 -- 4. Deduplicación: distintas anclas pueden converger al mismo conjunto
---    final; solo se persiste una vez.
+--    final; solo se persiste una vez. Tampoco se repiten alianzas que la
+--    minera ya aceptó o rechazó (esas no se borran al recalcular).
 -- 5. Se guarda solo si cobertura > mejor score individual y hay ≥ 2
 --    miembros. score_total penaliza alianzas grandes (-5 por miembro
 --    extra), para preferir la UTE más chica que resuelve el lote.
@@ -112,6 +113,17 @@ begin
 
   -- Reemplaza solo las sugerencias pendientes (no toca aceptadas/rechazadas).
   delete from public.utes_sugeridas where lote_id = p_lote_id and estado = 'sugerida';
+
+  -- Las alianzas que la minera ya aceptó o rechazó no se vuelven a sugerir:
+  -- sus firmas (ids de miembros ordenados) arrancan como "ya vistas".
+  select coalesce(array_agg(f.firma), '{}') into v_firmas
+  from (
+    select string_agg(um.empresa_id::text, ',' order by um.empresa_id) as firma
+    from public.utes_sugeridas u
+    join public.ute_miembros um on um.ute_id = u.id
+    where u.lote_id = p_lote_id and u.estado <> 'sugerida'
+    group by u.id
+  ) f;
 
   select array_agg(e.id) into v_candidatos
   from public.empresas e

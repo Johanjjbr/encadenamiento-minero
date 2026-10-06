@@ -1,4 +1,6 @@
-import { Handshake, Info } from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { CircleCheck, CircleX, Handshake, Info } from "lucide-react";
 import { CoverageBar } from "@/components/features/coverage-bar";
 import { EmpresaAvatar } from "@/components/features/empresa-avatar";
 import { MatchBadge } from "@/components/features/match-badge";
@@ -32,30 +34,74 @@ interface Props {
   scores: Record<string, number>;
   /** Primera sugerencia (la más sólida): se destaca. */
   destacada?: boolean;
+  /** Estado de la alianza (sugerida / aceptada / rechazada). */
+  estado?: "sugerida" | "aceptada" | "rechazada";
+  /** Botones de decisión (aceptar / rechazar), los arma la página. */
+  acciones?: ReactNode;
+  /** Link a la ficha de cada empresa miembro. */
+  hrefEmpresa?: (empresaId: string) => string;
 }
 
 /** UTE Builder: qué pymes forman la alianza, qué aporta cada una y cuánto
  *  del lote cubren juntas. */
-export function UteBuilderCard({ ute, miembros, requisitos, scores, destacada = false }: Props) {
+export function UteBuilderCard({
+  ute,
+  miembros,
+  requisitos,
+  scores,
+  destacada = false,
+  estado = "sugerida",
+  acciones,
+  hrefEmpresa,
+}: Props) {
   const reparto = repartirCobertura(requisitos, miembros);
   const completa = ute.cobertura >= 100;
   const mejorSola = Math.max(0, ...miembros.map((m) => scores[m.empresaId] ?? 0));
+
+  // Rechazada: versión compacta, para que no compita con las vigentes.
+  if (estado === "rechazada") {
+    return (
+      <article className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed bg-card/60 px-5 py-3 text-sm text-muted-foreground">
+        <span className="flex items-center gap-2">
+          <CircleX className="size-4" aria-hidden />
+          <span>
+            <span className="font-medium text-foreground">{miembros.map((m) => m.nombre).join(" + ")}</span> · rechazada
+            (cobertura {formatPorcentaje(ute.cobertura)})
+          </span>
+        </span>
+        {acciones}
+      </article>
+    );
+  }
+
+  const aceptada = estado === "aceptada";
 
   return (
     <article
       className={cn(
         "overflow-hidden rounded-2xl border bg-card shadow-sm",
-        destacada && "border-primary/40 ring-1 ring-primary/20"
+        destacada && !aceptada && "border-primary/40 ring-1 ring-primary/20",
+        aceptada && "border-emerald-300 ring-1 ring-emerald-200"
       )}
     >
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b bg-gradient-to-r from-accent/70 to-card p-5">
+      <header
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-4 border-b bg-gradient-to-r to-card p-5",
+          aceptada ? "from-emerald-50" : "from-accent/70"
+        )}
+      >
         <div className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Handshake className="size-5" aria-hidden />
+          <span
+            className={cn(
+              "grid size-10 place-items-center rounded-xl text-white",
+              aceptada ? "bg-emerald-600" : "bg-primary"
+            )}
+          >
+            {aceptada ? <CircleCheck className="size-5" aria-hidden /> : <Handshake className="size-5" aria-hidden />}
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-              {destacada ? "Alianza recomendada" : "Alianza alternativa"}
+            <p className={cn("text-xs font-semibold uppercase tracking-wide", aceptada ? "text-emerald-700" : "text-primary")}>
+              {aceptada ? "Alianza aceptada por la operadora" : destacada ? "Alianza recomendada" : "Alianza alternativa"}
             </p>
             <h3 className="text-lg font-semibold leading-tight">{miembros.map((m) => m.nombre).join(" + ")}</h3>
           </div>
@@ -109,7 +155,13 @@ export function UteBuilderCard({ ute, miembros, requisitos, scores, destacada = 
                       />
                     </span>
                     <div>
-                      <p className="font-medium leading-tight">{m.nombre}</p>
+                      {hrefEmpresa ? (
+                        <Link href={hrefEmpresa(m.empresaId)} className="font-medium leading-tight hover:text-primary hover:underline">
+                          {m.nombre}
+                        </Link>
+                      ) : (
+                        <p className="font-medium leading-tight">{m.nombre}</p>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         {m.departamento ?? "Sin departamento"} · aporta{" "}
                         <span className="font-semibold text-foreground">{formatPorcentaje(parte?.puntos ?? 0)}</span>
@@ -156,11 +208,14 @@ export function UteBuilderCard({ ute, miembros, requisitos, scores, destacada = 
           </p>
         )}
 
-        <p className="mt-4 flex items-start gap-1.5 text-xs text-muted-foreground">
-          <Info className="mt-px size-3.5 shrink-0" aria-hidden />
-          ★ = requisito obligatorio. Alianza sugerida a partir de capacidades declaradas; la homologación y la
-          contratación las define cada operadora.
-        </p>
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+          <p className="flex max-w-2xl items-start gap-1.5 text-xs text-muted-foreground">
+            <Info className="mt-px size-3.5 shrink-0" aria-hidden />
+            ★ = requisito obligatorio. Alianza sugerida a partir de capacidades declaradas; la homologación y la
+            contratación las define cada operadora.
+          </p>
+          {acciones}
+        </div>
       </div>
     </article>
   );

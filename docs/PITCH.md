@@ -21,7 +21,8 @@ Preparación: navegador con la URL de producción abierta en `/login`, zoom al 1
    - Ranking: Taller Mecánico Cuyo **63 %**, Seguridad Industrial Andina **55 %**; ninguna cumple los obligatorios.
    - Card **UTE Builder**: Cuyo + Andina → **cobertura 100 %** (score 95). Mostrar qué aporta cada una: Cuyo la mecánica pesada, Andina el HSE.
 3. (Opcional, 15 s) **Publicar licitación** → «Cargar ejemplo» → *Publicar*: el ranking y las UTEs del lote nuevo aparecen al instante.
-4. **Cerrar sesión** → **«Entrar como pyme»** (Taller Mecánico Cuyo): ve su **63 %**, la brecha «te falta: HSE (obligatorio)…» y la alianza sugerida con Andina.
+3b. (10 s) Clic en **Seguridad Industrial Andina** → ficha con capacidades y certificaciones; volver al lote y **Aceptar alianza**.
+4. **Cerrar sesión** → **«Entrar como pyme»** (Taller Mecánico Cuyo): ve su **63 %**, la brecha «te falta: HSE (obligatorio)…» y el aviso «¡Minera Andes del Sur aceptó tu alianza!».
 5. Remate: en *Transporte de insumos a sitio*, Transportes Cordillera llega sola al **100 %** → cuando una pyme puede sola, el sistema no fuerza alianzas.
 
 Plan B si falla internet o el deploy: `npm run dev` en la notebook con los mismos usuarios demo; como último recurso, capturas de pantalla de cada paso (sacarlas en el ensayo).
@@ -42,5 +43,5 @@ Plan B si falla internet o el deploy: `npm run dev` en la notebook con los mismo
 - [ ] Ensayo 1: producción, desde la notebook de la demo. Tiempo total: ___
 - [ ] Ensayo 2: producción, desde otro dispositivo (celular o tablet).
 - [ ] Ensayo 3: completo con cronómetro, con quien presenta y quien maneja la demo.
-- [ ] Después de cada ensayo, volver al estado del seed: las licitaciones de prueba se **Cierran** y luego se **Eliminan** desde el listado de la minera; si tocaste un perfil, `npm run seed` restaura niveles y certificaciones (las capacidades agregadas a mano se quitan desde *Mi perfil*).
+- [ ] Después de cada ensayo, volver al estado del seed: en el lote, **Deshacer aceptación** de la UTE; las licitaciones de prueba se **Cierran** y luego se **Eliminan** desde el listado de la minera; si tocaste un perfil, `npm run seed` restaura niveles y certificaciones (las capacidades agregadas a mano se quitan desde *Mi perfil*).
 - [ ] Capturas del Plan B guardadas.

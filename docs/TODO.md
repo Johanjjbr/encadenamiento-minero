@@ -35,7 +35,9 @@ Cada tarea tiene un criterio de aceptación (→). Trabajar en orden.
 - [x] **P1** Formulario minera: crear licitación, dividirla en lotes y cargar requisitos con peso/obligatorio. → `/dashboard/minera/nueva` (botón «Cargar ejemplo» para la demo). Al guardar calcula ranking + UTEs de cada lote. Desde el listado se puede Publicar / Cerrar / Reabrir. _(inserción con RLS + RPC verificada en el proyecto real; probar el flujo en el navegador)_
 - [x] **P1** Botón "Recalcular" que dispara `generar_utes`. Estados de carga, vacío y error en todas las vistas. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
 - [x] **P2** Mapa/filtro por departamento. → mapa esquemático de San Juan en el panel minero y en cada lote; tocar un departamento filtra el ranking.
-- [ ] **P2** Alerta a pyme cuando aparece una UTE que la incluye. Aceptar/rechazar UTE.
+- [x] **P2** Aceptar/rechazar UTE. → botones en cada alianza del lote (Aceptar / Rechazar / Deshacer); la pyme la ve como «aceptada» en su panel. `generar_utes` ya no borra ni vuelve a sugerir las decididas.
+- [x] **P2** Ficha de pyme para la minera (`/dashboard/minera/empresas/[id]`) y directorio de proveedores con búsqueda y filtro por departamento (`/dashboard/minera/empresas`).
+- [ ] **P2** Alerta a pyme cuando aparece una UTE que la incluye.
 
 ## Fase 6: Pitch y pruebas
 - [ ] **P0** Ensayar el flujo completo: minera publica → pyme ve match incompleto → sistema sugiere UTE → minera ve la UTE al 100%. → 3 ensayos sin fallas (checklist en `docs/PITCH.md` §4).

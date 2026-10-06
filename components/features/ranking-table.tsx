@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CircleCheck, CircleX } from "lucide-react";
 import { EmpresaAvatar } from "@/components/features/empresa-avatar";
 import { MatchBadge } from "@/components/features/match-badge";
@@ -18,7 +19,16 @@ const BARRA = { alto: "bg-emerald-600", medio: "bg-amber-500", bajo: "bg-rose-40
 
 /** Ranking de candidatas de un lote, ordenado por score, con estado de
  *  obligatorios y lo que le falta a cada una. */
-export function RankingTable({ filas, miembrosUte = [] }: { filas: FilaRanking[]; miembrosUte?: string[] }) {
+export function RankingTable({
+  filas,
+  miembrosUte = [],
+  hrefEmpresa,
+}: {
+  filas: FilaRanking[];
+  miembrosUte?: string[];
+  /** Si se pasa, el nombre de cada empresa lleva a su ficha. */
+  hrefEmpresa?: (empresaId: string) => string;
+}) {
   return (
     <div className="overflow-x-auto rounded-2xl border bg-card shadow-xs">
       <table className="w-full min-w-[720px] text-sm">
@@ -49,7 +59,13 @@ export function RankingTable({ filas, miembrosUte = [] }: { filas: FilaRanking[]
                   <EmpresaAvatar id={fila.empresaId} nombre={fila.nombre} />
                   <div>
                     <p className="font-medium leading-tight">
-                      {fila.nombre}
+                      {hrefEmpresa ? (
+                        <Link href={hrefEmpresa(fila.empresaId)} className="hover:text-primary hover:underline">
+                          {fila.nombre}
+                        </Link>
+                      ) : (
+                        fila.nombre
+                      )}
                       {miembrosUte.includes(fila.empresaId) && (
                         <span className="ml-2 inline-block whitespace-nowrap rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
                           En UTE
