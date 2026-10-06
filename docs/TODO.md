@@ -13,10 +13,10 @@ Cada tarea tiene un criterio de aceptación (→). Trabajar en orden.
 - [x] **P0** `.env.example` y `.env.local` configurados. → conexión verificada.
 
 ## Fase 2: Base de datos
-- [ ] **P0** `00_init_schema.sql`: enums, tablas de `CONTEXT.md` §3, índices en FKs. Idempotente. → se ejecuta 2 veces sin error.
-- [ ] **P0** `01_rls.sql`: políticas de `CONTEXT.md` §5. → un usuario pyme no puede leer datos privados de otra pyme (probado con 2 usuarios).
+- [x] **P0** `00_init_schema.sql`: enums, tablas de `CONTEXT.md` §3, índices en FKs. Idempotente. → se ejecuta 2 veces sin error.
+- [x] **P0** `01_rls.sql`: políticas de `CONTEXT.md` §5. → un usuario pyme no puede leer datos privados de otra pyme (probado con usuarios demo reales: 19 chequeos de pyme, minera y anónimo).
 - [x] **P1** Generar tipos → `types/database.ts` (generado desde el proyecto real; ver README para regenerar).
-- [ ] **P1** Trigger o Server Action que cree `empresa` + `perfil` al registrarse. → registro completo crea ambos.
+- [x] **P1** Trigger o Server Action que cree `empresa` + `perfil` al registrarse. → `handle_new_user` crea ambos (ver nota de `app_metadata` en `CONTEXT.md` §5).
 
 ## Fase 3: Algoritmos (RPC)
 - [x] **P0** `02_rpc_match.sql`: `calcular_match`, `ranking_lote`, `licitaciones_compatibles` según `CONTEXT.md` §4.1-4.2. → `supabase/tests/algoritmos_check.sql` pasa (verificado en el proyecto real).

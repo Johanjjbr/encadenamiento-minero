@@ -89,7 +89,7 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
 - `catalogo_capacidades`: lectura para todos los autenticados.
 - Una pyme solo puede **declarar** certificaciones (`estado = 'declarada'`); `verificada` la carga un tercero o el service role, y las verificadas no se editan desde el cliente.
 - `empresas.tipo` no es editable desde el cliente (permiso por columna). `matches`, `utes_sugeridas` (salvo `estado`) y `ute_miembros` solo se escriben desde RPC `security definer` o service role.
-- Registro: el trigger `handle_new_user` crea empresa + perfil. Para vincular un usuario a una empresa ya existente (seed) se usa `app_metadata.empresa_id`, que solo puede escribir el service role. `user_metadata` (controlado por el usuario) nunca decide a qué empresa se une.
+- Registro: el trigger `handle_new_user` crea empresa + perfil en el alta. Para vincular un usuario a una empresa **ya existente** (seed) no alcanza con `app_metadata.empresa_id`: `auth.admin.createUser` lo aplica después del alta y el trigger no lo ve, así que crea una empresa vacía. `scripts/seed.ts` re-enlaza el perfil a la empresa real y borra la vacía. `user_metadata` (controlado por el usuario) nunca decide a qué empresa se une.
 - Las funciones auxiliares de `01_rls.sql` son `security definer` para evitar recursión entre políticas.
 - `SUPABASE_SERVICE_ROLE_KEY` solo en `scripts/seed.ts` y código de servidor.
 

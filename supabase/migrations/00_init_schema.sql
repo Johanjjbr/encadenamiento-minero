@@ -165,9 +165,14 @@ create unique index if not exists uq_lote_req_norma
 -- REGISTRO: al crearse un usuario en auth.users se crea su perfil.
 --  * Autoregistro: rol y nombre_empresa vienen de raw_user_meta_data
 --    (lo envía el cliente en signUp) -> se crea una empresa nueva.
---  * Seed/admin: app_metadata.empresa_id vincula a una empresa existente.
---    app_metadata SOLO lo puede escribir el service role (no el usuario),
---    por eso es seguro para asignar empresas ya existentes.
+--  * Usuarios demo / admin: la rama de app_metadata.empresa_id está
+--    prevista para vincular a una empresa existente, pero con
+--    auth.admin.createUser Supabase aplica el app_metadata DESPUÉS del
+--    alta, así que en la práctica el trigger no lo ve y crea una empresa
+--    vacía. scripts/seed.ts lo resuelve re-enlazando el perfil a la empresa
+--    real y borrando la vacía. app_metadata solo lo escribe el service
+--    role (no el usuario), por eso esta rama es segura si algún día llega a
+--    tiempo (p. ej. un INSERT directo en auth.users).
 -- ---------------------------------------------------------------------
 create or replace function public.handle_new_user()
 returns trigger

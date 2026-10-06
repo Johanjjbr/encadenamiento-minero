@@ -213,7 +213,9 @@ const REQUISITOS: RequisitoSeed[] = [
 
 // ---------------------------------------------------------------------------
 // 4. Usuarios demo. Se vinculan a una empresa EXISTENTE vía app_metadata
-//    (solo el service role puede escribirlo; ver trigger handle_new_user).
+//    (solo el service role puede escribirlo). OJO: el trigger handle_new_user
+//    NO llega a ver ese app_metadata en el alta, así que el enlace real lo
+//    hace este script reescribiendo el perfil (ver asegurarUsuario).
 // ---------------------------------------------------------------------------
 interface UsuarioDemo {
   email: string;
@@ -394,11 +396,31 @@ async function asegurarUsuario(u: UsuarioDemo): Promise<"creado" | "existente"> 
     userId = data.user.id;
   }
 
-  // Asegura el perfil (normalmente lo crea el trigger handle_new_user).
+  // El trigger handle_new_user corre en el momento del alta, ANTES de que
+  // Supabase aplique el app_metadata. Por eso crea una empresa vacía
+  // ("Empresa sin nombre") y la liga al usuario. Acá se enlaza el perfil a la
+  // empresa real y se descarta la vacía (con guarda por nombre, para no
+  // borrar nunca una empresa de verdad).
+  const { data: previo, error: errPrevio } = await supabase
+    .from("perfiles")
+    .select("empresa_id")
+    .eq("id", userId)
+    .maybeSingle();
+  assertOk(`perfil previo de ${u.email}`, errPrevio);
+
   const { error: errPerfil } = await supabase
     .from("perfiles")
     .upsert({ id: userId, empresa_id: u.empresaId, rol: u.rol }, { onConflict: "id" });
   assertOk(`perfil de ${u.email}`, errPerfil);
+
+  if (previo?.empresa_id && previo.empresa_id !== u.empresaId) {
+    const { error: errLimpieza } = await supabase
+      .from("empresas")
+      .delete()
+      .eq("id", previo.empresa_id)
+      .eq("nombre", "Empresa sin nombre");
+    assertOk(`limpieza de empresa vacía de ${u.email}`, errLimpieza);
+  }
 
   return resultado;
 }
