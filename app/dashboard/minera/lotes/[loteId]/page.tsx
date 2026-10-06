@@ -1,23 +1,32 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight, Handshake, MapPin, Star, Target, Trophy, Users } from "lucide-react";
 import { ActionForm } from "@/components/features/action-form";
-import { MatchBadge } from "@/components/features/match-badge";
+import { CategoriaIcon } from "@/components/features/categoria-icon";
+import { ComparativaChart, type BarraComparativa } from "@/components/features/comparativa-chart";
+import { MapaSanJuan, type DatoDepartamento } from "@/components/features/mapa-san-juan";
+import { PageHeader } from "@/components/features/page-header";
 import { RankingTable, type FilaRanking } from "@/components/features/ranking-table";
+import { StatCard } from "@/components/features/stat-card";
 import { EmptyState, ErrorState } from "@/components/features/state-messages";
 import { UteBuilderCard } from "@/components/features/ute-builder-card";
 import { requireRol } from "@/lib/auth";
 import { recalcularLote } from "@/lib/actions/minera";
+import { formatPorcentaje } from "@/lib/format";
 import { parseAporte, parseBrecha } from "@/lib/match";
 import { createClient } from "@/lib/supabase/server";
 import type { MiembroUte, RequisitoResumen } from "@/lib/ute";
+import { cn } from "@/lib/utils";
 import { esUuid } from "@/lib/validation";
 
 interface Props {
   params: Promise<{ loteId: string }>;
+  searchParams: Promise<{ depto?: string }>;
 }
 
-export default async function LotePage({ params }: Props) {
+export default async function LotePage({ params, searchParams }: Props) {
   const { loteId } = await params;
+  const { depto } = await searchParams;
   if (!esUuid(loteId)) notFound();
 
   const sesion = await requireRol("minera");
@@ -31,7 +40,7 @@ export default async function LotePage({ params }: Props) {
       .maybeSingle(),
     supabase
       .from("lote_requisitos")
-      .select("id, tipo, norma, nivel_minimo, peso, obligatorio, capacidad:catalogo_capacidades(nombre)")
+      .select("id, tipo, norma, nivel_minimo, peso, obligatorio, capacidad:catalogo_capacidades(nombre, categoria)")
       .eq("lote_id", loteId)
       .order("obligatorio", { ascending: false })
       .order("peso", { ascending: false }),
@@ -58,8 +67,9 @@ export default async function LotePage({ params }: Props) {
     peso: r.peso,
     obligatorio: r.obligatorio,
   }));
+  const pesoTotal = requisitos.reduce((a, r) => a + r.peso, 0);
 
-  const filas: FilaRanking[] = (matchRes.data ?? [])
+  const todas: FilaRanking[] = (matchRes.data ?? [])
     .filter((m) => m.empresa !== null)
     .map((m) => ({
       empresaId: m.empresa!.id,
@@ -71,8 +81,12 @@ export default async function LotePage({ params }: Props) {
     }))
     .sort((a, b) => b.score - a.score || a.nombre.localeCompare(b.nombre, "es"));
 
-  const scores: Record<string, number> = Object.fromEntries(filas.map((f) => [f.empresaId, f.score]));
-  const mejorScore = filas[0]?.score ?? 0;
+  // Filtro por departamento (desde el mapa).
+  const filas = depto ? todas.filter((f) => f.departamento === depto) : todas;
+
+  const scores: Record<string, number> = Object.fromEntries(todas.map((f) => [f.empresaId, f.score]));
+  const mejor = todas[0];
+  const mejorScore = mejor?.score ?? 0;
 
   const utes = (uteRes.data ?? [])
     .map((u) => {
@@ -97,60 +111,127 @@ export default async function LotePage({ params }: Props) {
     // Más puntaje primero; a igual puntaje, la alianza de miembros más fuertes.
     .sort((a, b) => b.score_total - a.score_total || b.scoreIndividual - a.scoreIndividual);
 
+  const recomendada = utes[0];
+  const miembrosRecomendada = recomendada?.miembros.map((m) => m.empresaId) ?? [];
+
+  // Gráfico: top 5 pymes solas + la alianza recomendada.
+  const barras: BarraComparativa[] = [
+    ...todas.slice(0, 5).map((f) => ({
+      id: f.empresaId,
+      etiqueta: f.nombre,
+      valor: f.score,
+      tipo: "pyme" as const,
+      detalle: f.cumpleObligatorios ? "cumple obligatorios" : "le falta algún obligatorio",
+    })),
+    ...(recomendada
+      ? [
+          {
+            id: recomendada.id,
+            etiqueta: `UTE: ${recomendada.miembros.map((m) => m.nombre.split(" ")[0]).join(" + ")}`,
+            valor: recomendada.cobertura,
+            tipo: "ute" as const,
+            detalle: `${recomendada.miembros.length} miembros`,
+          },
+        ]
+      : []),
+  ];
+
+  // Mapa: candidatas con algún aporte (score > 0) por departamento.
+  const porDepto: Record<string, DatoDepartamento> = {};
+  for (const f of todas) {
+    if (!f.departamento || f.score <= 0) continue;
+    const d = (porDepto[f.departamento] ??= { cantidad: 0, nombres: [] });
+    d.cantidad += 1;
+    d.nombres!.push(`${f.nombre} (${Math.round(f.score)}%)`);
+  }
+  const base = `/dashboard/minera/lotes/${loteId}`;
+
   return (
     <div className="space-y-8">
-      <nav aria-label="Ruta" className="text-sm text-muted-foreground">
+      <nav aria-label="Ruta" className="flex items-center gap-1 text-sm text-muted-foreground">
         <Link href="/dashboard/minera" className="hover:text-foreground hover:underline">
           Licitaciones
         </Link>
-        <span aria-hidden> › </span>
-        <span>{lote.licitacion.titulo}</span>
+        <ChevronRight className="size-3.5" aria-hidden />
+        <span className="truncate">{lote.licitacion.titulo}</span>
       </nav>
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{lote.titulo}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {filas.length > 0 ? (
-              <span className="inline-flex items-center gap-1.5">
-                Mejor candidata individual <MatchBadge score={mejorScore} />
-              </span>
-            ) : (
-              "Todavía no se calculó el ranking de este lote."
-            )}
-          </p>
-        </div>
-        <ActionForm
-          action={recalcularLote}
-          submitLabel="Recalcular ranking y UTEs"
-          pendingLabel="Recalculando…"
-          successLabel="Actualizado ✓"
-          variante="secundario"
-        >
-          <input type="hidden" name="loteId" value={loteId} />
-        </ActionForm>
-      </header>
+      <PageHeader
+        eyebrow={`Lote · licitación ${lote.licitacion.estado}`}
+        titulo={lote.titulo}
+        descripcion={`${requisitos.length} requisitos · ${requisitos.filter((r) => r.obligatorio).length} obligatorios · ${todas.length} pymes evaluadas`}
+        acciones={
+          <ActionForm
+            action={recalcularLote}
+            submitLabel="Recalcular ranking y UTEs"
+            pendingLabel="Recalculando…"
+            successLabel="Actualizado ✓"
+            variante="secundario"
+            className="[&>div]:mt-0"
+          >
+            <input type="hidden" name="loteId" value={loteId} />
+          </ActionForm>
+        }
+      />
 
-      <section aria-labelledby="titulo-requisitos">
-        <h2 id="titulo-requisitos" className="text-lg font-semibold">
-          Requisitos del lote
+      <dl className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          icono={Trophy}
+          etiqueta="Mejor pyme sola"
+          valor={mejor ? formatPorcentaje(mejorScore) : "—"}
+          detalle={mejor ? `${mejor.nombre}${mejor.cumpleObligatorios ? "" : " · le falta algún obligatorio"}` : "Sin calcular"}
+        />
+        <StatCard
+          icono={Handshake}
+          etiqueta="Mejor alianza (UTE)"
+          valor={recomendada ? formatPorcentaje(recomendada.cobertura) : "—"}
+          detalle={
+            recomendada
+              ? `+${Math.round(recomendada.cobertura - mejorScore)} puntos vs. la mejor sola`
+              : mejorScore >= 100
+                ? "No hace falta: una pyme cubre todo"
+                : "Sin alianza que mejore"
+          }
+          destacado={Boolean(recomendada)}
+        />
+        <StatCard
+          icono={Users}
+          etiqueta="Candidatas con aporte"
+          valor={todas.filter((f) => f.score > 0).length}
+          detalle={`de ${todas.length} pymes evaluadas`}
+        />
+      </dl>
+
+      <section aria-labelledby="titulo-requisitos" className="rounded-2xl border bg-card p-5 shadow-xs">
+        <h2 id="titulo-requisitos" className="flex items-center gap-2 font-semibold">
+          <Target className="size-4 text-primary" aria-hidden /> Requisitos del lote
         </h2>
         {reqRes.error ? (
           <ErrorState mensaje={reqRes.error.message} />
         ) : (reqRes.data ?? []).length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">Este lote todavía no tiene requisitos cargados.</p>
         ) : (
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {(reqRes.data ?? []).map((r) => (
               <li
                 key={r.id}
-                className="rounded-lg border bg-card px-3 py-1.5 text-sm"
-                title={`Peso ${r.peso} de 10${r.obligatorio ? " · obligatorio" : ""}`}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border px-3 py-2.5",
+                  r.obligatorio ? "border-primary/30 bg-accent/40" : "bg-background/60"
+                )}
               >
-                <span className={r.obligatorio ? "font-semibold" : ""}>{r.capacidad?.nombre ?? r.norma}</span>
-                <span className="ml-2 text-xs text-muted-foreground">
-                  {r.tipo === "capacidad" ? `nivel ${r.nivel_minimo}+ · ` : ""}peso {r.peso}
-                  {r.obligatorio ? " · obligatorio" : ""}
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
+                  <CategoriaIcon categoria={r.tipo === "norma" ? "norma" : r.capacidad?.categoria} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 text-sm font-medium leading-tight">
+                    <span className="truncate">{r.capacidad?.nombre ?? r.norma}</span>
+                    {r.obligatorio && <Star className="size-3.5 shrink-0 fill-primary text-primary" aria-label="Obligatorio" />}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {r.tipo === "capacidad" ? `Nivel ${r.nivel_minimo}+` : "Certificación"} · peso {r.peso}
+                    {pesoTotal > 0 ? ` (${Math.round((r.peso / pesoTotal) * 100)}%)` : ""}
+                  </span>
                 </span>
               </li>
             ))}
@@ -158,31 +239,33 @@ export default async function LotePage({ params }: Props) {
         )}
       </section>
 
-      <section aria-labelledby="titulo-utes" className="space-y-3">
-        <h2 id="titulo-utes" className="text-lg font-semibold">
-          Alianzas sugeridas (UTE)
+      <section aria-labelledby="titulo-utes" className="space-y-4">
+        <h2 id="titulo-utes" className="flex items-center gap-2 text-lg font-semibold">
+          <Handshake className="size-5 text-primary" aria-hidden /> Alianzas sugeridas (UTE)
         </h2>
         {errUte ? (
           <ErrorState mensaje={errUte.message} />
         ) : utes.length > 0 ? (
           <div className="space-y-4">
-            {utes.map((ute) => (
+            {utes.map((ute, i) => (
               <UteBuilderCard
                 key={ute.id}
                 ute={ute}
                 miembros={ute.miembros}
                 requisitos={requisitos}
                 scores={scores}
+                destacada={i === 0}
               />
             ))}
           </div>
-        ) : filas.length === 0 ? (
+        ) : todas.length === 0 ? (
           <EmptyState
             titulo="Sin datos todavía"
             descripcion="Calculá el ranking para ver las candidatas y las alianzas posibles."
           />
         ) : mejorScore >= 100 ? (
           <EmptyState
+            icono={Trophy}
             titulo="No hace falta una UTE"
             descripcion="Al menos una pyme cubre este lote completo por sí sola."
           />
@@ -194,19 +277,65 @@ export default async function LotePage({ params }: Props) {
         )}
       </section>
 
-      <section aria-labelledby="titulo-ranking" className="space-y-3">
-        <h2 id="titulo-ranking" className="text-lg font-semibold">
-          Ranking de candidatas
-        </h2>
+      {todas.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <section className="rounded-2xl border bg-card p-5 shadow-xs">
+            <h2 className="font-semibold">Solas vs. en alianza</h2>
+            <p className="mb-4 mt-1 text-xs text-muted-foreground">
+              Porcentaje del lote que cubre cada pyme por su cuenta, comparado con la alianza recomendada.
+            </p>
+            <ComparativaChart barras={barras} />
+            {recomendada && mejor && (
+              <p className="mt-5 rounded-xl bg-accent/60 p-4 text-sm text-accent-foreground">
+                Ninguna pyme llega sola: la mejor cubre el {formatPorcentaje(mejorScore)}. En alianza,{" "}
+                <span className="font-semibold">{recomendada.miembros.map((m) => m.nombre).join(" y ")}</span> cubren el{" "}
+                <span className="font-semibold">{formatPorcentaje(recomendada.cobertura)}</span> del lote
+                {recomendada.cobertura >= 100 ? ", incluidos todos los requisitos obligatorios" : ""}.
+              </p>
+            )}
+          </section>
+          <section className="rounded-2xl border bg-card p-5 shadow-xs">
+            <h2 className="flex items-center gap-2 font-semibold">
+              <MapPin className="size-4 text-primary" aria-hidden /> Dónde están las candidatas
+            </h2>
+            <p className="mb-4 mt-1 text-xs text-muted-foreground">Tocá un departamento para filtrar el ranking.</p>
+            <MapaSanJuan
+              datos={porDepto}
+              activo={depto}
+              mina={sesion.empresa.departamento}
+              hrefFiltro={(d) => `${base}?depto=${encodeURIComponent(d)}#ranking`}
+              hrefLimpiar={`${base}#ranking`}
+            />
+          </section>
+        </div>
+      )}
+
+      <section id="ranking" aria-labelledby="titulo-ranking" className="scroll-mt-6 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="titulo-ranking" className="flex items-center gap-2 text-lg font-semibold">
+            <Trophy className="size-5 text-primary" aria-hidden /> Ranking de candidatas
+          </h2>
+          {depto && (
+            <Link
+              href={`${base}#ranking`}
+              scroll={false}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground hover:bg-accent/70"
+            >
+              <MapPin className="size-3.5" aria-hidden /> {depto} · quitar filtro ✕
+            </Link>
+          )}
+        </div>
         {matchRes.error ? (
           <ErrorState mensaje={matchRes.error.message} />
-        ) : filas.length === 0 ? (
+        ) : todas.length === 0 ? (
           <EmptyState
             titulo="No hay candidatas calculadas"
             descripcion="Usá «Recalcular ranking y UTEs» para evaluar a las pymes contra este lote."
           />
+        ) : filas.length === 0 ? (
+          <EmptyState icono={MapPin} titulo={`Sin candidatas en ${depto}`} descripcion="Probá con otro departamento." />
         ) : (
-          <RankingTable filas={filas} />
+          <RankingTable filas={filas} miembrosUte={miembrosRecomendada} />
         )}
       </section>
     </div>

@@ -22,12 +22,12 @@ export function CoverageBar({
       <div
         role="img"
         aria-label={`Cobertura ${Math.round(total)}% (${detalle})`}
-        className="flex h-3 w-full overflow-hidden rounded-full bg-muted"
+        className="flex h-3.5 w-full gap-[2px] overflow-hidden rounded-full bg-muted"
       >
         {segmentos.map((s) => (
           <div
             key={s.etiqueta}
-            className={cn("h-full", s.clase)}
+            className={cn("h-full first:rounded-l-full last:rounded-r-[4px]", s.clase)}
             style={{ width: `${Math.max(0, Math.min(100, s.valor))}%` }}
             title={`${s.etiqueta}: ${Math.round(s.valor)}%`}
           />

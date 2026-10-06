@@ -13,6 +13,8 @@ interface Props {
   className?: string;
   /** "boton" (por defecto) o "secundario" para acciones menos importantes. */
   variante?: "boton" | "secundario";
+  /** Barra de acciones fija abajo (formularios largos). */
+  fijo?: boolean;
 }
 
 /** Formulario genérico con Server Action: estado de carga, error y éxito. */
@@ -24,21 +26,27 @@ export function ActionForm({
   children,
   className,
   variante = "boton",
+  fijo = false,
 }: Props) {
   const [estado, formAction, pendiente] = useActionState<FormState, FormData>(action, {});
 
   return (
     <form action={formAction} className={className}>
       {children}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div
+        className={cn(
+          "mt-4 flex flex-wrap items-center gap-3",
+          fijo && "sticky bottom-4 z-10 rounded-xl border bg-card/95 p-3 shadow-lg backdrop-blur"
+        )}
+      >
         <button
           type="submit"
           disabled={pendiente}
           className={cn(
-            "rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60",
+            "rounded-lg px-4 py-2 text-sm font-medium shadow-xs transition-colors disabled:opacity-60",
             variante === "boton"
               ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "border bg-background hover:bg-muted"
+              : "border bg-card hover:bg-muted"
           )}
         >
           {pendiente ? pendingLabel : submitLabel}

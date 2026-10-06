@@ -12,7 +12,7 @@ function Pendiente() {
     <span
       aria-hidden
       data-pendiente={pending ? "true" : "false"}
-      className={cn("ml-2 inline-block size-1.5 rounded-full bg-current", pending ? "animate-pulse" : "opacity-0")}
+      className={cn("ml-auto inline-block size-1.5 rounded-full bg-current", pending ? "animate-pulse" : "opacity-0")}
     />
   );
 }
@@ -20,10 +20,12 @@ function Pendiente() {
 export function NavLink({
   href,
   exact = false,
+  icono,
   children,
 }: {
   href: string;
   exact?: boolean;
+  icono?: ReactNode;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -34,12 +36,13 @@ export function NavLink({
       href={href}
       aria-current={activo ? "page" : undefined}
       className={cn(
-        "whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        "flex items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         activo
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
       )}
     >
+      {icono}
       {children}
       <Pendiente />
     </Link>

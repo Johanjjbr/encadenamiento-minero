@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { ActionForm } from "@/components/features/action-form";
 import { crearLicitacion, type LicitacionInput } from "@/lib/actions/minera";
 import { NIVELES, NORMAS } from "@/lib/constants";
@@ -35,7 +36,7 @@ const requisitoVacio = (): RequisitoUI => ({ key: nuevaKey(), valor: "", nivel_m
 const loteVacio = (): LoteUI => ({ key: nuevaKey(), titulo: "", monto: "", requisitos: [requisitoVacio()] });
 
 const inputCls =
-  "w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function LicitacionForm({
   catalogo,
@@ -139,18 +140,19 @@ export function LicitacionForm({
       pendingLabel="Guardando y calculando candidatas…"
       successLabel="Licitación creada ✓"
       className="space-y-8"
+      fijo
     >
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
 
-      <section className="space-y-4 rounded-xl border bg-card p-5">
+      <section className="space-y-4 rounded-2xl border bg-card p-5 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Datos generales</h2>
           <button
             type="button"
             onClick={cargarEjemplo}
-            className="rounded-md border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground ring-1 ring-primary/20 transition-colors hover:bg-primary hover:text-primary-foreground"
           >
-            Cargar ejemplo
+            <Sparkles className="size-3.5" aria-hidden /> Cargar ejemplo
           </button>
         </div>
 
@@ -211,7 +213,7 @@ export function LicitacionForm({
         const pesoTotal = lote.requisitos.filter((r) => r.valor).reduce((a, r) => a + r.peso, 0);
         const usados = new Set(lote.requisitos.map((r) => r.valor).filter(Boolean));
         return (
-          <section key={lote.key} className="space-y-4 rounded-xl border bg-card p-5">
+          <section key={lote.key} className="space-y-4 rounded-2xl border bg-card p-5 shadow-xs">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-semibold">Lote {i + 1}</h3>
               {lotes.length > 1 && (

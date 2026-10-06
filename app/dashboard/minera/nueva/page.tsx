@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHeader } from "@/components/features/page-header";
 import { LicitacionForm } from "@/components/features/licitacion-form";
 import { ErrorState } from "@/components/features/state-messages";
 import { requireRol } from "@/lib/auth";
@@ -23,16 +24,16 @@ export default async function NuevaLicitacionPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <Link href="/dashboard/minera" className="text-sm text-muted-foreground hover:underline">
+      <nav aria-label="Ruta">
+        <Link href="/dashboard/minera" className="text-sm text-muted-foreground hover:text-foreground hover:underline">
           ← Licitaciones
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Publicar licitación</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Dividí el contrato en lotes y cargá los requisitos de cada uno. Al guardar, la plataforma calcula el ranking de
-          pymes y sugiere UTEs cuando ninguna llega sola.
-        </p>
-      </header>
+      </nav>
+      <PageHeader
+        eyebrow="Nueva licitación"
+        titulo="Publicar licitación"
+        descripcion="Dividí el contrato en lotes y cargá los requisitos de cada uno. Al guardar, la plataforma calcula el ranking de pymes y sugiere UTEs cuando ninguna llega sola."
+      />
 
       {(catalogo ?? []).length === 0 ? (
         <ErrorState mensaje="El catálogo de capacidades está vacío. Corré `npm run seed` para cargarlo." />

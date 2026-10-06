@@ -34,13 +34,14 @@ Cada tarea tiene un criterio de aceptación (→). Trabajar en orden.
 - [x] **P0** **Componente UTE Builder:** card con las pymes, qué aporta cada una y barra de cobertura hasta 100%. → se ve en la vista minera con los datos del seed. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
 - [x] **P1** Formulario minera: crear licitación, dividirla en lotes y cargar requisitos con peso/obligatorio. → `/dashboard/minera/nueva` (botón «Cargar ejemplo» para la demo). Al guardar calcula ranking + UTEs de cada lote. Desde el listado se puede Publicar / Cerrar / Reabrir. _(inserción con RLS + RPC verificada en el proyecto real; probar el flujo en el navegador)_
 - [x] **P1** Botón "Recalcular" que dispara `generar_utes`. Estados de carga, vacío y error en todas las vistas. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
-- [ ] **P2** Mapa/filtro por departamento. Alerta a pyme cuando aparece una UTE que la incluye. Aceptar/rechazar UTE.
+- [x] **P2** Mapa/filtro por departamento. → mapa esquemático de San Juan en el panel minero y en cada lote; tocar un departamento filtra el ranking.
+- [ ] **P2** Alerta a pyme cuando aparece una UTE que la incluye. Aceptar/rechazar UTE.
 
 ## Fase 6: Pitch y pruebas
 - [ ] **P0** Ensayar el flujo completo: minera publica → pyme ve match incompleto → sistema sugiere UTE → minera ve la UTE al 100%. → 3 ensayos sin fallas (checklist en `docs/PITCH.md` §4).
 - [ ] **P0** Deploy (Vercel + Supabase) y prueba desde otro dispositivo. Variables en Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEMO_MODE=true`, `DEMO_PASSWORD` (la service role **no** hace falta en Vercel: solo la usa el seed). En Supabase → Auth → URL Configuration, agregar la URL de Vercel.
 - [x] **P0** Preparar pitch con `docs/NEGOCIO.md` (3 min + demo). → guion, demo clic por clic, Q&A y checklist en `docs/PITCH.md`. _(falta ensayarlo)_
-- [ ] **P1** Pulido de UI/UX y landing.
+- [x] **P1** Pulido de UI/UX y landing. → identidad «minería andina» (piedra, basalto y cobre), sidebar oscuro con íconos, avatares por empresa, anillos de score, gráfico «solas vs. en alianza», landing y login rediseñados, perfil con niveles en botones segmentados y completitud. _(revisado con capturas contra datos simulados del seed)_
 
 ## Corte de MVP
 Si el tiempo aprieta, sacrificar en este orden: P2 → P1 de UI → tests → registro real (usar usuarios demo). **Nunca** sacrificar: seed, RPC de match y UTE, UTE Builder Card.

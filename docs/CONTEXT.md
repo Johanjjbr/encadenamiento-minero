@@ -105,7 +105,7 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
 │   └── page.tsx                # Landing / pitch
 ├── components/
 │   ├── ui/                     # shadcn
-│   └── features/               # UteBuilderCard, MatchBadge, CoverageBar
+│   └── features/               # UteBuilderCard, MatchBadge, CoverageBar, ScoreRing, MapaSanJuan, ComparativaChart, EmpresaAvatar
 ├── lib/
 │   ├── supabase/               # client.ts, server.ts, middleware.ts
 │   ├── actions/                # Server Actions (mutaciones)
@@ -122,6 +122,8 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
 - **Guardia de rol y streaming:** no poner un `loading.tsx` a nivel `app/dashboard/`. Un límite de streaming por encima de las páginas hace que `redirect()` salga como 200 + redirección del lado del cliente (y deja una petición RSC colgada) en lugar de un 307. Los esqueletos van en las páginas lentas (`pyme/perfil/loading.tsx`, `minera/lotes/[loteId]/loading.tsx`) y el guardia de rol vive en `dashboard/minera/layout.tsx` y `dashboard/pyme/layout.tsx`, por fuera de esos límites. Las páginas igual llaman a `requireRol` (un layout no se re-ejecuta al navegar entre hijas).
 
 - El cliente React **solo presenta**: no calcula scores ni UTEs.
+- Identidad visual «minería andina»: tokens en `app/globals.css` (primario cobre, sidebar basalto). Los colores de miembros de UTE (cobre, azul, verde) van en orden fijo y están validados para daltonismo entre vecinos; el nombre siempre acompaña al color.
+- El mapa de San Juan es **esquemático** (tile map), no a escala: se aclara en la propia UI.
 - Migraciones idempotentes y numeradas; se ejecutan en orden en el SQL Editor de Supabase. (El CLI `db push` espera nombres con timestamp; si se migra a CLI, renombrar.)
 - Seed determinista: correrlo dos veces no duplica datos (`ON CONFLICT DO NOTHING/UPDATE`).
 - Los datos de demo deben producir al menos un caso donde ninguna pyme llega al 100% y una UTE de 2 pymes sí.
