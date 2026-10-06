@@ -234,3 +234,28 @@ export async function cambiarEstadoLicitacion(_prev: FormState, formData: FormDa
   revalidatePath("/dashboard/pyme");
   return { ok: true };
 }
+
+/** Elimina una licitación propia que no esté abierta (borrador o cerrada).
+ *  ON DELETE CASCADE borra lotes, requisitos, matches y UTEs. Útil para limpiar
+ *  pruebas después de un ensayo de demo. */
+export async function eliminarLicitacion(_prev: FormState, formData: FormData): Promise<FormState> {
+  const sesion = await requireRol("minera");
+
+  const id = String(formData.get("licitacionId") ?? "");
+  if (!esUuid(id)) return { error: "Licitación inválida." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("licitaciones")
+    .delete()
+    .eq("id", id)
+    .eq("minera_id", sesion.empresa.id)
+    .neq("estado", "abierta")
+    .select("id");
+  if (error) return { error: `No se pudo eliminar: ${error.message}` };
+  if (!data || data.length === 0) return { error: "Solo se pueden eliminar licitaciones en borrador o cerradas." };
+
+  revalidatePath("/dashboard/minera");
+  revalidatePath("/dashboard/pyme");
+  return { ok: true };
+}

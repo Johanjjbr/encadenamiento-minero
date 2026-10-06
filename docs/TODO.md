@@ -37,9 +37,9 @@ Cada tarea tiene un criterio de aceptación (→). Trabajar en orden.
 - [ ] **P2** Mapa/filtro por departamento. Alerta a pyme cuando aparece una UTE que la incluye. Aceptar/rechazar UTE.
 
 ## Fase 6: Pitch y pruebas
-- [ ] **P0** Ensayar el flujo completo: minera publica → pyme ve match incompleto → sistema sugiere UTE → minera ve la UTE al 100%. → 3 ensayos sin fallas.
+- [ ] **P0** Ensayar el flujo completo: minera publica → pyme ve match incompleto → sistema sugiere UTE → minera ve la UTE al 100%. → 3 ensayos sin fallas (checklist en `docs/PITCH.md` §4).
 - [ ] **P0** Deploy (Vercel + Supabase) y prueba desde otro dispositivo. Variables en Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEMO_MODE=true`, `DEMO_PASSWORD` (la service role **no** hace falta en Vercel: solo la usa el seed). En Supabase → Auth → URL Configuration, agregar la URL de Vercel.
-- [ ] **P0** Preparar pitch con `docs/NEGOCIO.md` (3 min + demo).
+- [x] **P0** Preparar pitch con `docs/NEGOCIO.md` (3 min + demo). → guion, demo clic por clic, Q&A y checklist en `docs/PITCH.md`. _(falta ensayarlo)_
 - [ ] **P1** Pulido de UI/UX y landing.
 
 ## Corte de MVP

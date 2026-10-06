@@ -56,6 +56,13 @@ NEXT_PUBLIC_DEMO_MODE=true
 DEMO_PASSWORD=Demo-Minero-2026   # la misma con la que corriste el seed
 ```
 
+## Deploy (Vercel)
+
+1. Subí los cambios: `git add -A && git commit -m "..." && git push origin master`.
+2. En [vercel.com/new](https://vercel.com/new) importá `Johanjjbr/encadenamiento-minero` (framework: Next.js, sin cambios de build).
+3. Variables de entorno (Production y Preview): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEMO_MODE=true`, `DEMO_PASSWORD`. **No** cargues `SUPABASE_SERVICE_ROLE_KEY`: solo la usa el seed.
+4. Deploy. Cada `git push` a `master` vuelve a desplegar.
+
 ## Base de datos
 
 En el **SQL Editor** de Supabase, ejecutá en orden los archivos de `supabase/migrations/`:
@@ -138,6 +145,7 @@ docs/           CONTEXT.md, TODO.md, NEGOCIO.md
 - [`docs/TODO.md`](docs/TODO.md): hoja de ruta con criterios de aceptación
 - [`docs/NEGOCIO.md`](docs/NEGOCIO.md): modelo de negocio y guion de pitch
 - [`docs/DEMO.md`](docs/DEMO.md): escenario de demo, datos del seed y resultados esperados
+- [`docs/PITCH.md`](docs/PITCH.md): guion de pitch, demo clic por clic y checklist de ensayo
 
 ## Equipo
 

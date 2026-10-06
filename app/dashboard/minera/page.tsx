@@ -3,7 +3,7 @@ import { ActionForm } from "@/components/features/action-form";
 import { MatchBadge } from "@/components/features/match-badge";
 import { EmptyState, ErrorState } from "@/components/features/state-messages";
 import { requireRol } from "@/lib/auth";
-import { cambiarEstadoLicitacion } from "@/lib/actions/minera";
+import { cambiarEstadoLicitacion, eliminarLicitacion } from "@/lib/actions/minera";
 import { formatFecha } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -117,6 +117,18 @@ export default async function MineraInicio() {
                     <input type="hidden" name="licitacionId" value={lic.id} />
                     <input type="hidden" name="estado" value={ACCION_ESTADO[lic.estado].siguiente} />
                   </ActionForm>
+                  {lic.estado !== "abierta" && (
+                    <ActionForm
+                      action={eliminarLicitacion}
+                      variante="secundario"
+                      submitLabel="Eliminar"
+                      pendingLabel="Eliminando…"
+                      successLabel="Eliminada ✓"
+                      className="mt-1 [&>div]:mt-1 [&>div]:justify-end"
+                    >
+                      <input type="hidden" name="licitacionId" value={lic.id} />
+                    </ActionForm>
+                  )}
                 </div>
               </div>
 

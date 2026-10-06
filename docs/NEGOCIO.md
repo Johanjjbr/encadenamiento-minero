@@ -46,6 +46,8 @@
 
 1. **Problema (30 s):** la minería pasa por San Juan pero las pymes locales quedan afuera de las cadenas de valor.
 2. **Solución (30 s):** mercado digital que califica proveedores y arma alianzas.
-3. **Demo (90 s):** minera publica lote → pyme ve 72% y qué le falta → el sistema sugiere UTE con otra pyme → la minera ve cobertura 100%.
+3. **Demo (90 s):** minera publica lote → pyme ve 63% y qué le falta → el sistema sugiere UTE con otra pyme → la minera ve cobertura 100%.
 4. **Negocio (30 s):** SaaS a operadoras + freemium pymes + marketplace de cierre de brechas + integración con tech local.
 5. **Cierre:** impacto en contenido local y próximos pasos (piloto con una operadora).
+
+Guion detallado, demo clic por clic, preguntas del jurado y checklist de ensayo: [`docs/PITCH.md`](PITCH.md).
