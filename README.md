@@ -50,6 +50,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 # Solo servidor / scripts. NUNCA con prefijo NEXT_PUBLIC_
 SUPABASE_SERVICE_ROLE_KEY=...
+
+# Acceso demo (botones "Entrar como ..." en /login). Solo para entornos de demo.
+NEXT_PUBLIC_DEMO_MODE=true
+DEMO_PASSWORD=Demo-Minero-2026   # la misma con la que corriste el seed
 ```
 
 ## Base de datos
@@ -96,6 +100,14 @@ npx supabase gen types typescript --project-id TU_PROJECT_ID > types/database.ts
 # Windows PowerShell (evita que el archivo quede en UTF-16)
 npx supabase gen types typescript --project-id TU_PROJECT_ID | Out-File -Encoding utf8 types/database.ts
 ```
+
+## Recorrido de la demo
+
+1. `npm run dev` y abrir `http://localhost:3000/login` → «Entrar como minera».
+2. **Licitaciones y candidatas** → *Mantenimiento de flota*: el ranking muestra que nadie pasa del 64 % y la card del **UTE Builder** sugiere Taller Mecánico Cuyo + Seguridad Industrial Andina al 100 %.
+3. Cerrar sesión → «Entrar como pyme» (Cuyo): ve su 63 %, qué le falta («HSE», obligatorio) y la alianza sugerida.
+4. (Opcional) Como minera, **Publicar licitación** → «Cargar ejemplo» → *Publicar*: el sistema calcula al instante el ranking y las UTEs de cada lote nuevo.
+5. **Mi perfil**: subir «HSE» a nivel 2 y guardar; al volver a *Licitaciones compatibles* el score cambia. (Dejalo en «No ofrece» después para no alterar la demo: `npm run seed` no quita capacidades que agregues a mano.)
 
 ## Usuarios de demo
 

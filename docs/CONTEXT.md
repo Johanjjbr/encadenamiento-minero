@@ -100,7 +100,7 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
 ├── app/
 │   ├── (auth)/                 # Login y registro B2B (elige rol)
 │   ├── dashboard/
-│   │   ├── minera/             # Publicar licitación/lotes, ranking, UTEs
+│   │   ├── minera/             # nueva/ (alta licitación + lotes + requisitos), lotes/[id] (ranking, UTEs)
 │   │   └── pyme/               # Perfil y capacidades, licitaciones compatibles, alertas UTE
 │   └── page.tsx                # Landing / pitch
 ├── components/
@@ -118,6 +118,8 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
 ```
 
 ## 7. Reglas de diseño
+
+- **Guardia de rol y streaming:** no poner un `loading.tsx` a nivel `app/dashboard/`. Un límite de streaming por encima de las páginas hace que `redirect()` salga como 200 + redirección del lado del cliente (y deja una petición RSC colgada) en lugar de un 307. Los esqueletos van en las páginas lentas (`pyme/perfil/loading.tsx`, `minera/lotes/[loteId]/loading.tsx`) y el guardia de rol vive en `dashboard/minera/layout.tsx` y `dashboard/pyme/layout.tsx`, por fuera de esos límites. Las páginas igual llaman a `requireRol` (un layout no se re-ejecuta al navegar entre hijas).
 
 - El cliente React **solo presenta**: no calcula scores ni UTEs.
 - Migraciones idempotentes y numeradas; se ejecutan en orden en el SQL Editor de Supabase. (El CLI `db push` espera nombres con timestamp; si se migra a CLI, renombrar.)

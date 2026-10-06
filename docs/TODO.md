@@ -24,21 +24,21 @@ Cada tarea tiene un criterio de aceptación (→). Trabajar en orden.
 - [x] **P1** Tests SQL simples (casos: pyme perfecta, pyme sin obligatorios, sin candidatas). → `supabase/tests/algoritmos_check.sql`.
 
 ## Fase 4: Seed
-- [ ] **P0** `scripts/seed.ts` idempotente: catálogo, 2 mineras, 5 pymes verosímiles de San Juan, 2 licitaciones con lotes y requisitos, usuarios demo. → `npm run seed` dos veces no duplica.
+- [x] **P0** `scripts/seed.ts` idempotente: catálogo, 2 mineras, 5 pymes verosímiles de San Juan, 2 licitaciones con lotes y requisitos, usuarios demo. → `npm run seed` dos veces no duplica. _(verificado en el proyecto real: 24 capacidades, 7 empresas, 3 lotes, 11 requisitos, 3 usuarios sin empresas huérfanas; rankings y UTEs coinciden con `docs/DEMO.md` §6)_
 - [x] **P1** Credenciales demo documentadas en README (minera y pyme).
 
 ## Fase 5: Interfaz
-- [ ] **P0** Layout de dashboard con navegación por rol y ruta protegida. → minera y pyme ven menús distintos.
-- [ ] **P0** **Vista Pyme:** editar capacidades (con niveles) y certificaciones; lista "Licitaciones compatibles" con `MatchBadge` y brecha ("te falta: X, Y"). → cambiar una capacidad modifica el score al recargar.
-- [ ] **P0** **Vista Minera:** listar licitaciones y lotes; ranking de candidatas por lote. → tabla ordenada con score y estado de obligatorios.
-- [ ] **P0** **Componente UTE Builder:** card con las pymes, qué aporta cada una y barra de cobertura hasta 100%. → se ve en la vista minera con los datos del seed.
-- [ ] **P1** Formulario minera: crear licitación, dividirla en lotes y cargar requisitos con peso/obligatorio.
-- [ ] **P1** Botón "Recalcular" que dispara `generar_utes`. Estados de carga, vacío y error en todas las vistas.
+- [x] **P0** Layout de dashboard con navegación por rol y ruta protegida. → minera y pyme ven menús distintos. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
+- [x] **P0** **Vista Pyme:** editar capacidades (con niveles) y certificaciones; lista "Licitaciones compatibles" con `MatchBadge` y brecha ("te falta: X, Y"). → cambiar una capacidad modifica el score al recargar. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
+- [x] **P0** **Vista Minera:** listar licitaciones y lotes; ranking de candidatas por lote. → tabla ordenada con score y estado de obligatorios. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
+- [x] **P0** **Componente UTE Builder:** card con las pymes, qué aporta cada una y barra de cobertura hasta 100%. → se ve en la vista minera con los datos del seed. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
+- [x] **P1** Formulario minera: crear licitación, dividirla en lotes y cargar requisitos con peso/obligatorio. → `/dashboard/minera/nueva` (botón «Cargar ejemplo» para la demo). Al guardar calcula ranking + UTEs de cada lote. Desde el listado se puede Publicar / Cerrar / Reabrir. _(inserción con RLS + RPC verificada en el proyecto real; probar el flujo en el navegador)_
+- [x] **P1** Botón "Recalcular" que dispara `generar_utes`. Estados de carga, vacío y error en todas las vistas. _(implementado y verificado en navegador contra un Supabase simulado; confirmar en tu entorno)_
 - [ ] **P2** Mapa/filtro por departamento. Alerta a pyme cuando aparece una UTE que la incluye. Aceptar/rechazar UTE.
 
 ## Fase 6: Pitch y pruebas
 - [ ] **P0** Ensayar el flujo completo: minera publica → pyme ve match incompleto → sistema sugiere UTE → minera ve la UTE al 100%. → 3 ensayos sin fallas.
-- [ ] **P0** Deploy (Vercel + Supabase) y prueba desde otro dispositivo.
+- [ ] **P0** Deploy (Vercel + Supabase) y prueba desde otro dispositivo. Variables en Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEMO_MODE=true`, `DEMO_PASSWORD` (la service role **no** hace falta en Vercel: solo la usa el seed). En Supabase → Auth → URL Configuration, agregar la URL de Vercel.
 - [ ] **P0** Preparar pitch con `docs/NEGOCIO.md` (3 min + demo).
 - [ ] **P1** Pulido de UI/UX y landing.
 
