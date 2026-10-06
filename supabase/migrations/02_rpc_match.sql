@@ -232,12 +232,17 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------
--- PERMISOS: solo las dos funciones públicas son invocables desde el
--- cliente. calcular_match y las funciones _prefijadas son motor interno.
+-- PERMISOS: solo las funciones públicas son invocables desde el cliente.
+-- calcular_match y las funciones _prefijadas son motor interno.
+-- OJO (Supabase): los permisos por defecto se otorgan EXPLÍCITAMENTE a
+-- anon y authenticated, así que 'revoke ... from public' no alcanza:
+-- hay que revocar también de esos roles.
 -- ---------------------------------------------------------------------
-revoke execute on function public._cumplimiento_requisito(uuid, public.tipo_requisito, uuid, text, smallint) from public;
-revoke execute on function public._cumplimiento_lote_empresa(uuid, uuid) from public;
-revoke execute on function public.calcular_match(uuid, uuid) from public;
+revoke execute on function public._cumplimiento_requisito(uuid, public.tipo_requisito, uuid, text, smallint) from public, anon, authenticated;
+revoke execute on function public._cumplimiento_lote_empresa(uuid, uuid) from public, anon, authenticated;
+revoke execute on function public.calcular_match(uuid, uuid) from public, anon, authenticated;
 
-grant execute on function public.ranking_lote(uuid) to authenticated;
-grant execute on function public.licitaciones_compatibles(uuid) to authenticated;
+revoke execute on function public.ranking_lote(uuid) from public, anon;
+revoke execute on function public.licitaciones_compatibles(uuid) from public, anon;
+grant execute on function public.ranking_lote(uuid) to authenticated, service_role;
+grant execute on function public.licitaciones_compatibles(uuid) to authenticated, service_role;

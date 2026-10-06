@@ -96,6 +96,11 @@ declare
   v_firmas              text[] := '{}';
   v_ute_id              uuid;
   v_score_total         numeric;
+  v_anchor_depto        text;
+  v_mismo_depto         boolean;
+  v_mejor_mismo_depto   boolean;
+  v_indiv               numeric;
+  v_mejor_indiv         numeric;
 begin
   if auth.uid() is not null and not public.lote_es_mio(p_lote_id) then
     raise exception 'No autorizado para generar UTEs de este lote';
@@ -129,26 +134,44 @@ begin
     select cid as empresa_id, cc.cobertura
     from unnest(v_candidatos) as cid
     cross join lateral public._cobertura_conjunto(p_lote_id, array[cid]) as cc
-    order by cc.cobertura desc
+    order by cc.cobertura desc, cid
     limit 3
   loop
     v_conjunto := array[v_anchor_rec.empresa_id];
     v_cobertura := v_anchor_rec.cobertura;
+    select e.departamento into v_anchor_depto from public.empresas e where e.id = v_anchor_rec.empresa_id;
 
     -- Expansión greedy: agrega, de a uno, el miembro que más suma.
+    -- Desempate cuando varias suben igual la cobertura (CONTEXT.md §4.3):
+    -- 1) mismo departamento que el ancla, 2) mayor score individual.
     loop
       v_mejor_candidato := null;
       v_mejor_cobertura := v_cobertura;
+      v_mejor_mismo_depto := false;
+      v_mejor_indiv := 0;
 
       for v_cand in
-        select cid as empresa_id from unnest(v_candidatos) as cid where cid <> all (v_conjunto)
+        select cid as empresa_id from unnest(v_candidatos) as cid where cid <> all (v_conjunto) order by cid
       loop
         select cc.cobertura into v_cobertura_prueba
         from public._cobertura_conjunto(p_lote_id, v_conjunto || v_cand.empresa_id) as cc;
 
-        if v_cobertura_prueba > v_mejor_cobertura then
-          v_mejor_cobertura := v_cobertura_prueba;
-          v_mejor_candidato := v_cand.empresa_id;
+        if v_cobertura_prueba > v_cobertura then
+          select cc.cobertura into v_indiv
+          from public._cobertura_conjunto(p_lote_id, array[v_cand.empresa_id]) as cc;
+          select (e.departamento is not distinct from v_anchor_depto) into v_mismo_depto
+          from public.empresas e where e.id = v_cand.empresa_id;
+
+          if v_mejor_candidato is null
+             or v_cobertura_prueba > v_mejor_cobertura
+             or (v_cobertura_prueba = v_mejor_cobertura
+                 and (v_mismo_depto, v_indiv) > (v_mejor_mismo_depto, v_mejor_indiv))
+          then
+            v_mejor_cobertura := v_cobertura_prueba;
+            v_mejor_candidato := v_cand.empresa_id;
+            v_mejor_mismo_depto := v_mismo_depto;
+            v_mejor_indiv := v_indiv;
+          end if;
         end if;
       end loop;
 
@@ -221,7 +244,9 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------
--- PERMISOS
+-- PERMISOS (ver nota en 02_rpc_match.sql: hay que revocar de anon y
+-- authenticated explícitamente, no alcanza con 'from public').
 -- ---------------------------------------------------------------------
-revoke execute on function public._cobertura_conjunto(uuid, uuid[]) from public;
-grant execute on function public.generar_utes(uuid, integer) to authenticated;
+revoke execute on function public._cobertura_conjunto(uuid, uuid[]) from public, anon, authenticated;
+revoke execute on function public.generar_utes(uuid, integer) from public, anon;
+grant execute on function public.generar_utes(uuid, integer) to authenticated, service_role;

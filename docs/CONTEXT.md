@@ -77,7 +77,8 @@ Es un problema de **cobertura de conjuntos**. Se resuelve con heurística greedy
    score_total = cobertura − 5 × (n_miembros − 1)     -- penaliza alianzas grandes
    ```
 5. **Poda y deduplicación:** si al quitar un miembro la cobertura no baja, se lo elimina (evita miembros redundantes). Luego se descartan UTEs con el mismo conjunto de miembros que otra ya generada (distintas anclas pueden converger en la misma alianza).
-6. Se persiste solo si hay ≥ 2 miembros y `cobertura` > mejor score individual. Se guardan en `utes_sugeridas` + `ute_miembros` (con `aporte`). Se re-ejecuta de forma idempotente (reemplaza las sugeridas en estado `sugerida` de ese lote).
+6. **Alternativas:** si distintas anclas llegan a conjuntos de miembros distintos con buena cobertura, se persisten todos (son alternativas). Anclas y candidatas se recorren en orden determinista (cobertura desc, luego id).
+7. Se persiste solo si hay ≥ 2 miembros y `cobertura` > mejor score individual. Se guardan en `utes_sugeridas` + `ute_miembros` (con `aporte`). Se re-ejecuta de forma idempotente (reemplaza las sugeridas en estado `sugerida` de ese lote).
 
 ## 5. Seguridad (RLS)
 

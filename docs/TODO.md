@@ -15,17 +15,17 @@ Cada tarea tiene un criterio de aceptación (→). Trabajar en orden.
 ## Fase 2: Base de datos
 - [ ] **P0** `00_init_schema.sql`: enums, tablas de `CONTEXT.md` §3, índices en FKs. Idempotente. → se ejecuta 2 veces sin error.
 - [ ] **P0** `01_rls.sql`: políticas de `CONTEXT.md` §5. → un usuario pyme no puede leer datos privados de otra pyme (probado con 2 usuarios).
-- [ ] **P1** Generar tipos: `npm run types` → `types/database.ts` sin errores de compilación.
+- [x] **P1** Generar tipos → `types/database.ts` (generado desde el proyecto real; ver README para regenerar).
 - [ ] **P1** Trigger o Server Action que cree `empresa` + `perfil` al registrarse. → registro completo crea ambos.
 
 ## Fase 3: Algoritmos (RPC)
-- [ ] **P0** `02_rpc_match.sql`: `calcular_match`, `ranking_lote`, `licitaciones_compatibles` según `CONTEXT.md` §4.1-4.2. → `supabase/tests/algoritmos_check.sql` pasa los 3 casos.
-- [ ] **P0** `03_rpc_ute.sql`: `generar_utes` según §4.3, con comentarios de la lógica (incluye poda y dedup). → `supabase/tests/algoritmos_check.sql` pasa los 3 casos.
+- [x] **P0** `02_rpc_match.sql`: `calcular_match`, `ranking_lote`, `licitaciones_compatibles` según `CONTEXT.md` §4.1-4.2. → `supabase/tests/algoritmos_check.sql` pasa (verificado en el proyecto real).
+- [x] **P0** `03_rpc_ute.sql`: `generar_utes` según §4.3, con comentarios de la lógica (incluye poda y dedup). → `supabase/tests/algoritmos_check.sql` pasa (verificado en el proyecto real).
 - [x] **P1** Tests SQL simples (casos: pyme perfecta, pyme sin obligatorios, sin candidatas). → `supabase/tests/algoritmos_check.sql`.
 
 ## Fase 4: Seed
 - [ ] **P0** `scripts/seed.ts` idempotente: catálogo, 2 mineras, 5 pymes verosímiles de San Juan, 2 licitaciones con lotes y requisitos, usuarios demo. → `npm run seed` dos veces no duplica.
-- [ ] **P1** Credenciales demo documentadas en README (minera y pyme).
+- [x] **P1** Credenciales demo documentadas en README (minera y pyme).
 
 ## Fase 5: Interfaz
 - [ ] **P0** Layout de dashboard con navegación por rol y ruta protegida. → minera y pyme ven menús distintos.

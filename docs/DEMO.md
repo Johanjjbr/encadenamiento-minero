@@ -109,7 +109,7 @@ Contrato grande **fraccionado en 2 lotes**.
 | Transportes Cordillera | 20 | No |
 | Taller Mecánico Cuyo | 15 | No |
 
-**UTE esperada:** Soldaduras del Oeste + Seguridad Industrial Andina → cobertura 100, `score_total` 95. Desempate: las tres candidatas para completar la brecha (HSE) aportan lo mismo, gana Andina por mayor score individual.
+**UTEs esperadas (alternativas):** Soldaduras del Oeste + Seguridad Industrial Andina → cobertura 100, `score_total` 95. Como la brecha (HSE nivel 1) la completan igual Andina, EcoServicios y Transportes, el algoritmo puede devolver **más de una UTE con el mismo puntaje** (p. ej. Soldaduras + Transportes). Es el comportamiento correcto: son alternativas válidas. Para mostrar primero la más sólida, la interfaz ordena por `score_total` desc y, a igual puntaje, por la suma de scores individuales de los miembros (Soldaduras + Andina = 130 le gana a Soldaduras + Transportes = 100).
 
 ## 7. Guion de demo (90 s)
 
@@ -120,4 +120,4 @@ Contrato grande **fraccionado en 2 lotes**.
 
 ## 8. Cómo verificar el algoritmo
 
-Después de `npm run seed`, `ranking_lote(<lote 1>)` debe devolver exactamente los scores de la tabla del Lote 1, y `generar_utes(<lote 1>)` debe crear una sola UTE con dos miembros. Si difiere, hay un bug en el RPC (o en el seed), no en la interfaz.
+Después de `npm run seed`, `ranking_lote(<lote 1>)` debe devolver exactamente los scores de la tabla del Lote 1, y `generar_utes(<lote 1>)` debe crear una sola UTE con dos miembros. Para el Lote 3 hay que esperar una o más UTEs alternativas (ver §6). Si difiere, hay un bug en el RPC (o en el seed), no en la interfaz.

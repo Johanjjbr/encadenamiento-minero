@@ -76,10 +76,18 @@ npm run seed
 ```bash
 npm run dev      # servidor de desarrollo en http://localhost:3000
 npm run build    # build de producción
-npm run seed     # carga catálogo, pymes, mineras y licitaciones de demo
+npm run seed     # carga catálogo, pymes, mineras, licitaciones y usuarios de demo
 ```
 
-Para generar los tipos de la base (requiere `npx supabase login` una vez):
+El script `seed` hay que registrarlo una sola vez en `package.json` (requiere Node 20.6+):
+
+```bash
+npm pkg set "scripts.seed=tsx --env-file=.env.local scripts/seed.ts"
+```
+
+El seed es **idempotente** (IDs fijos + upsert): se puede correr todas las veces que haga falta sin duplicar datos. Al terminar calcula rankings y UTEs y verifica los resultados esperados de [`docs/DEMO.md`](docs/DEMO.md); si algo no coincide, termina con error y marca con ✗ qué fila difiere.
+
+Para regenerar `types/database.ts` tras cambiar el esquema (requiere `npx supabase login` una vez):
 
 ```bash
 # macOS / Linux / Git Bash
@@ -88,6 +96,16 @@ npx supabase gen types typescript --project-id TU_PROJECT_ID > types/database.ts
 # Windows PowerShell (evita que el archivo quede en UTF-16)
 npx supabase gen types typescript --project-id TU_PROJECT_ID | Out-File -Encoding utf8 types/database.ts
 ```
+
+## Usuarios de demo
+
+Los crea `npm run seed`. Contraseña por defecto: `Demo-Minero-2026` (se puede cambiar con la variable `DEMO_PASSWORD` en `.env.local` antes de correr el seed). Son solo para demo: no los uses en un entorno con datos reales.
+
+| Rol | Email | Empresa |
+|---|---|---|
+| Minera | `minera.demo@example.com` | Minera Andes del Sur |
+| Pyme | `pyme.demo@example.com` | Taller Mecánico Cuyo |
+| Pyme | `pyme2.demo@example.com` | Seguridad Industrial Andina |
 
 ## Estructura
 
